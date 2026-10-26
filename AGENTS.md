@@ -8,3 +8,6 @@
 - Automated sync stays disabled until the user explicitly authorizes deployment readiness.
 - Never run kubectl apply, Argo sync, Helm, or cluster mutations without explicit authorization.
 - Never add Co-Authored-By lines to commit messages.
+- Phase 4 monitoring stack (OTel Collector, Prometheus, Loki, Grafana) lives under observability/ as Argo CD-managed Helm releases with pinned chart versions.
+- APM, incident management and ChatOps credentials are referenced by secret identifiers only.
+- New Kustomize roots must be added to scripts/validate_structure.py and the render list in .github/workflows/validate.yml in the same change.

@@ -1,6 +1,6 @@
-# ToggleMaster Phase 3 GitOps
+# ToggleMaster Phase 4 GitOps
 
-Repositório do estado desejado Kubernetes para o Tech Challenge Fase 3.
+Repositório do estado desejado Kubernetes para o Tech Challenge Fase 4. Evolui do repositório GitOps da Fase 3, commit `555ac3f`, e adiciona a stack de observabilidade em `observability/`.
 
 Este repositório não instala Argo CD, não acessa o OKE e não aplica manifests. As políticas de auto-sync estão explicitamente desabilitadas até a infraestrutura, os secrets de bootstrap e os manifests migrados serem revisados.
 
@@ -10,12 +10,13 @@ Este repositório não instala Argo CD, não acessa o OKE e não aplica manifest
 - Uma tag de imagem independente por serviço.
 - Recursos compartilhados em platform/.
 - AppProject, ApplicationSet e Application de plataforma em clusters/homolog/.
+- Stack de observabilidade (OTel Collector, Prometheus, Loki e Grafana) em observability/.
 - Nenhum segredo em texto puro, base64 ou arquivo gerado.
 
 ## Fluxo
 
 ~~~text
-tech-challenge-fase-3 main
+tech-challenge-fase-4 main
   -> CI publica imagens sha-* no OCIR
   -> um job altera os overlays afetados neste repositório
   -> um único commit registra a promoção
@@ -29,6 +30,7 @@ apps/<service>/base/
 apps/<service>/overlays/homolog/
 platform/base/
 platform/overlays/homolog/
+observability/
 clusters/homolog/
 ~~~
 
