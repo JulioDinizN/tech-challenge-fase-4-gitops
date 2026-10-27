@@ -1,0 +1,93 @@
+# OpenTelemetry Collector: peça central de telemetria.
+# - Recebe OTLP dos microsserviços (Service local por nó).
+# - Lê os logs de todos os contêineres do cluster (file_log), exceto os dos serviços,
+#   que já chegam por OTLP com trace_id.
+# - Roteia métricas ao Prometheus, logs ao Loki e traces ao New Relic.
+fullnameOverride: otel-collector
+mode: daemonset
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+
+serviceAccount:
+  create: true
+  name: otel-collector
+
+service:
+  enabled: true
+
+presets:
+  logsCollection:
+    enabled: true
+  kubernetesAttributes:
+    enabled: true
+
+extraEnvs:
+  - name: NEW_RELIC_LICENSE_KEY
+    valueFrom:
+      secretKeyRef:
+        name: otel-collector-secrets
+        key: NEW_RELIC_LICENSE_KEY
+extraVolumes:
+  - name: secrets-store-inline
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: otel-collector-secrets
+extraVolumeMounts:
+  - name: secrets-store-inline
+    mountPath: /mnt/secrets-store
+    readOnly: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 384Mi
+
+config:
+  receivers:
+    file_log:
+      exclude:
+        - /var/log/pods/observability_otel-collector*_*/opentelemetry-collector/*.log
+        - /var/log/pods/togglemaster_*/auth-service/*.log
+        - /var/log/pods/togglemaster_*/flag-service/*.log
+        - /var/log/pods/togglemaster_*/targeting-service/*.log
+        - /var/log/pods/togglemaster_*/evaluation-service/*.log
+        - /var/log/pods/togglemaster_*/analytics-service/*.log
+  processors:
+    resource/environment:
+      attributes:
+        - key: deployment.environment.name
+          value: homolog
+          action: upsert
+        # O preset kubernetesAttributes preenche service.namespace com o namespace do pod,
+        # o que mudaria o rótulo job do Prometheus para "<namespace>/<serviço>". O dashboard
+        # e o alerta usam job="<serviço>", igual ao ambiente local.
+        - key: service.namespace
+          action: delete
+  exporters:
+    prometheus_remote_write:
+      endpoint: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090/api/v1/write
+    otlp_http/loki:
+      endpoint: http://loki.observability.svc.cluster.local:3100/otlp
+    otlp_http/newrelic:
+      endpoint: https://otlp.nr-data.net
+      headers:
+        api-key: ${env:NEW_RELIC_LICENSE_KEY}
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, k8s_attributes, resource/environment, batch]
+        exporters: [otlp_http/newrelic]
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, k8s_attributes, resource/environment, batch]
+        exporters: [prometheus_remote_write]
+      logs:
+        receivers: [otlp, file_log]
+        processors: [memory_limiter, k8s_attributes, resource/environment, batch]
+        exporters: [otlp_http/loki]

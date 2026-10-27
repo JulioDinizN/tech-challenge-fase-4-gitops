@@ -1,0 +1,103 @@
+# Prometheus (métricas), Grafana (visualização e alertas), kube-state-metrics e node-exporter.
+# O Alertmanager fica desligado: o Grafana Alerting é o motor de alertas do projeto.
+fullnameOverride: kube-prometheus-stack
+
+crds:
+  enabled: true
+
+defaultRules:
+  create: false
+
+alertmanager:
+  enabled: false
+
+# Plano de controle gerenciado pelo OKE: não há endpoints acessíveis para estes alvos.
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+coreDns:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # O OTel Collector envia as métricas das aplicações por remote write.
+    enableRemoteWriteReceiver: true
+    retention: 2d
+    retentionSize: 4GB
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 768Mi
+      limits:
+        memory: 1536Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      memory: 96Mi
+
+grafana:
+  fullnameOverride: grafana
+  serviceAccount:
+    create: true
+    name: grafana
+  # Usuário/senha de administração e credenciais das integrações vêm do OCI Vault (CSI).
+  admin:
+    existingSecret: grafana-secrets
+    userKey: GF_ADMIN_USER
+    passwordKey: GF_ADMIN_PASSWORD
+  envFromSecrets:
+    - name: grafana-secrets
+  extraVolumes:
+    - name: secrets-store-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: grafana-secrets
+  extraVolumeMounts:
+    - name: secrets-store-inline
+      mountPath: /mnt/secrets-store
+      readOnly: true
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.observability.svc.cluster.local:3100
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: observability
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: true
+    alerts:
+      enabled: true
+      label: grafana_alert
+      searchNamespace: observability
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      memory: 384Mi

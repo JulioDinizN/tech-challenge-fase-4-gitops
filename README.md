@@ -6,7 +6,7 @@ Este repositório não instala Argo CD, não acessa o OKE e não aplica manifest
 
 ## Responsabilidades
 
-- Uma base e um overlay homolog por microsserviço.
+- Uma base e um overlay homolog por microsserviço e para o Self-Healing.
 - Uma tag de imagem independente por serviço.
 - Recursos compartilhados em platform/.
 - AppProject, ApplicationSet e Application de plataforma em clusters/homolog/.
@@ -26,7 +26,7 @@ tech-challenge-fase-4 main
 ## Estrutura
 
 ~~~text
-apps/<service>/base/
+apps/<service>/base/        # cinco serviços + self-healing
 apps/<service>/overlays/homolog/
 platform/base/
 platform/overlays/homolog/
@@ -34,7 +34,7 @@ observability/
 clusters/homolog/
 ~~~
 
-Os overlays renderizam 32 recursos: 11 compartilhados, 4 para auth, 4 para flag, 4 para targeting, 5 para evaluation e 4 para analytics. Há cinco Deployments e propriedade única dos recursos. Identificadores e imagens de bootstrap ainda precisam ser configurados antes da implantação. Apenas homolog será provisionado; produção não é exigida pelo enunciado.
+Os overlays renderizam 38 recursos: 11 compartilhados, 4 para auth, 4 para flag, 4 para targeting, 5 para evaluation, 4 para analytics e 6 para o Self-Healing (Deployment, Service, ServiceAccount, Role, RoleBinding e SecretProviderClass). A stack de observabilidade fica em `observability/`, com projeto Argo CD próprio. Cada recurso tem um único dono. Identificadores e imagens de bootstrap ainda precisam ser configurados antes da implantação. Apenas homolog será provisionado; produção não é exigida pelo enunciado.
 
 ## Segurança
 

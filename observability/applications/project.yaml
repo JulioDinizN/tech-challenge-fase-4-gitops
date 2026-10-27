@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: observability
+  namespace: argocd
+spec:
+  description: Stack de observabilidade do ToggleMaster (OTel Collector, Prometheus, Loki e Grafana)
+  sourceRepos:
+    - https://github.com/JulioDinizN/tech-challenge-fase-4-gitops.git
+    - https://prometheus-community.github.io/helm-charts
+    - https://grafana.github.io/helm-charts
+    - https://open-telemetry.github.io/opentelemetry-helm-charts
+  destinations:
+    - namespace: observability
+      server: https://kubernetes.default.svc
+    # kube-prometheus-stack cria o Service do kubelet usado pelo ServiceMonitor.
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+  # Charts de monitoramento instalam CRDs, ClusterRoles e webhooks de admissão.
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

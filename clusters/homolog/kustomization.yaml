@@ -5,3 +5,4 @@ resources:
   - project.yaml
   - platform-application.yaml
   - applicationset.yaml
+  - ../../observability/applications

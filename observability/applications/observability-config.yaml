@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/part-of: togglemaster-observability
+spec:
+  project: observability
+  source:
+    repoURL: https://github.com/JulioDinizN/tech-challenge-fase-4-gitops.git
+    targetRevision: main
+    path: observability/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

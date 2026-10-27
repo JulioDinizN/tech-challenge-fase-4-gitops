@@ -1,0 +1,47 @@
+apiVersion: 1
+
+# Destinos do alerta no cluster. As credenciais chegam como variáveis de ambiente
+# a partir do OCI Vault (SecretProviderClass grafana-secrets); nenhum valor fica no Git.
+contactPoints:
+  - orgId: 1
+    name: togglemaster-incidents
+    receivers:
+      - uid: pagerduty-togglemaster
+        type: pagerduty
+        settings:
+          integrationKey: $PAGERDUTY_INTEGRATION_KEY
+          severity: critical
+          class: http-5xx
+          component: '{{ .CommonLabels.service }}'
+          group: togglemaster
+      - uid: discord-togglemaster
+        type: discord
+        settings:
+          url: $DISCORD_WEBHOOK_URL
+          use_discord_username: true
+          title: '{{ if eq .Status "firing" }}🔥 FIRING{{ else }}✅ RESOLVED{{ end }}: {{ .CommonLabels.alertname }}'
+          message: |-
+            {{ range .Alerts }}**{{ .Annotations.summary }}**
+            Serviço: `{{ .Labels.service }}` · Severidade: `{{ .Labels.severity }}` · Status: `{{ .Status }}`
+            Valor medido: {{ range $k, $v := .Values }}{{ $k }}={{ printf "%.2f" $v }} {{ end }}
+            {{ .Annotations.description }}
+            Início: {{ .StartsAt.Format "02/01/2006 15:04:05 MST" }}
+            Dashboard: {{ .DashboardURL }}
+            Runbook: {{ .Annotations.runbook_url }}
+            {{ end }}
+      - uid: self-healing-togglemaster
+        type: webhook
+        settings:
+          url: http://self-healing.togglemaster.svc.cluster.local:8080/webhook
+          httpMethod: POST
+          authorization_scheme: Bearer
+          authorization_credentials: $SELF_HEALING_TOKEN
+
+policies:
+  - orgId: 1
+    receiver: togglemaster-incidents
+    group_by: [alertname, deployment]
+    group_wait: 10s
+    group_interval: 1m
+    # Repetição longa: o Self-Healing não deve reiniciar o serviço em laço.
+    repeat_interval: 4h

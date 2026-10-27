@@ -1,0 +1,59 @@
+apiVersion: 1
+
+# Regra de alerta do ToggleMaster. Fonte única: usada pelo Grafana do cluster
+# (ConfigMap gerado pelo Kustomize) e pelo Grafana do Docker Compose local.
+groups:
+  - orgId: 1
+    name: togglemaster-slo
+    folder: ToggleMaster
+    interval: 10s
+    rules:
+      - uid: auth-service-5xx-rate
+        title: AuthService5xxErrorRate
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              # Percentual de respostas 5xx no último minuto. Sem 5xx, o numerador vira 0.
+              expr: >-
+                100 * (
+                  sum(rate(http_server_request_duration_seconds_count{job="auth-service", http_response_status_code=~"5.."}[1m]))
+                  or vector(0)
+                )
+                / sum(rate(http_server_request_duration_seconds_count{job="auth-service"}[1m]))
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          team: togglemaster
+          service: auth-service
+          # Deployment que o Self-Healing pode reiniciar (precisa estar na allowlist).
+          deployment: auth-service
+        annotations:
+          summary: "auth-service com {{ printf \"%.1f\" $values.A.Value }}% de respostas 5xx"
+          description: >-
+            Mais de 5% das respostas do auth-service foram erro 5xx por pelo menos 1 minuto.
+            flag-service e targeting-service dependem dele para validar chaves de API.
+            Ação automática: o Self-Healing executa rollout restart do Deployment auth-service.
+          runbook_url: https://github.com/JulioDinizN/tech-challenge-fase-4/blob/main/docs/observability.md#runbook-auth-service-5xx
+          __dashboardUid__: togglemaster-overview
+          __panelId__: "5"
