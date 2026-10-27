@@ -49,6 +49,12 @@ spec:
       - env:
         - name: PORT
           value: '8002'
+        - name: OTEL_SERVICE_NAME
+          value: flag-service
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.observability.svc.cluster.local:4318
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: deployment.environment.name=homolog
         - name: AUTH_SERVICE_URL
           valueFrom:
             configMapKeyRef:
@@ -151,9 +157,9 @@ metadata:
 spec:
   parameters:
     authType: workload
-    secrets: "- name: togglemaster-flag-service-app-password\n  stage: CURRENT\n  fileName:\
+    secrets: "- name: __OCI_FLAG_APP_PASSWORD_SECRET_NAME__\n  stage: CURRENT\n  fileName:\
       \ DB_PASSWORD\n"
-    vaultId: ocid1.vault.oc1.iad.ejvkovgxaafh6.abuwcljtfemgj75poo34ezder6blmj24rz3oes2xqjrtexqf3jwmvowffoeq
+    vaultId: __OCI_VAULT_ID__
   provider: oci
   secretObjects:
   - data:

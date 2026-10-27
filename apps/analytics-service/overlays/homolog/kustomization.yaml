@@ -6,8 +6,8 @@ resources:
 
 images:
   - name: togglemaster/analytics-service
-    newName: iad.ocir.io/idjtuagz9un0/togglemaster/analytics-service
-    newTag: sha-15ca04f4d523
+    newName: ocir.invalid/togglemaster/analytics-service
+    newTag: bootstrap
 
 labels:
   - pairs:

@@ -6,8 +6,8 @@ resources:
 
 images:
   - name: togglemaster/auth-service
-    newName: iad.ocir.io/idjtuagz9un0/togglemaster/auth-service
-    newTag: sha-15ca04f4d523
+    newName: ocir.invalid/togglemaster/auth-service
+    newTag: bootstrap
 
 labels:
   - pairs:

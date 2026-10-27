@@ -49,6 +49,12 @@ spec:
       - env:
         - name: PORT
           value: '8004'
+        - name: OTEL_SERVICE_NAME
+          value: evaluation-service
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.observability.svc.cluster.local:4318
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: deployment.environment.name=homolog
         - name: REDIS_URL
           valueFrom:
             configMapKeyRef:
@@ -186,9 +192,9 @@ metadata:
 spec:
   parameters:
     authType: workload
-    secrets: "- name: togglemaster-internal-api-key\n  stage: CURRENT\n  fileName:\
+    secrets: "- name: __OCI_INTERNAL_API_KEY_SECRET_NAME__\n  stage: CURRENT\n  fileName:\
       \ SERVICE_API_KEY\n"
-    vaultId: ocid1.vault.oc1.iad.ejvkovgxaafh6.abuwcljtfemgj75poo34ezder6blmj24rz3oes2xqjrtexqf3jwmvowffoeq
+    vaultId: __OCI_VAULT_ID__
   provider: oci
   secretObjects:
   - data:

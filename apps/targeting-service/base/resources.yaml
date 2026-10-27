@@ -49,6 +49,12 @@ spec:
       - env:
         - name: PORT
           value: '8003'
+        - name: OTEL_SERVICE_NAME
+          value: targeting-service
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector.observability.svc.cluster.local:4318
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: deployment.environment.name=homolog
         - name: AUTH_SERVICE_URL
           valueFrom:
             configMapKeyRef:
@@ -151,9 +157,9 @@ metadata:
 spec:
   parameters:
     authType: workload
-    secrets: "- name: togglemaster-targeting-service-app-password\n  stage: CURRENT\n\
+    secrets: "- name: __OCI_TARGETING_APP_PASSWORD_SECRET_NAME__\n  stage: CURRENT\n\
       \  fileName: DB_PASSWORD\n"
-    vaultId: ocid1.vault.oc1.iad.ejvkovgxaafh6.abuwcljtfemgj75poo34ezder6blmj24rz3oes2xqjrtexqf3jwmvowffoeq
+    vaultId: __OCI_VAULT_ID__
   provider: oci
   secretObjects:
   - data:
