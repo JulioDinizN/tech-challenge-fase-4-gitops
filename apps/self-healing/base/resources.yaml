@@ -1,0 +1,168 @@
+# Self-Healing: recebe o webhook do Grafana Alerting e reinicia Deployments da allowlist.
+# A conta de serviço só pode ler e alterar (patch) os Deployments listados no Role.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+  name: self-healing
+  namespace: togglemaster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+  name: self-healing
+  namespace: togglemaster
+rules:
+- apiGroups: [apps]
+  resources: [deployments]
+  resourceNames:
+  - auth-service
+  - flag-service
+  - targeting-service
+  - evaluation-service
+  - analytics-service
+  verbs: [get, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+  name: self-healing
+  namespace: togglemaster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: self-healing
+subjects:
+- kind: ServiceAccount
+  name: self-healing
+  namespace: togglemaster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+  name: self-healing
+  namespace: togglemaster
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+  selector:
+    app.kubernetes.io/name: self-healing
+    app.kubernetes.io/part-of: togglemaster
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+  name: self-healing
+  namespace: togglemaster
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: self-healing
+      app.kubernetes.io/part-of: togglemaster
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: self-healing
+        app.kubernetes.io/part-of: togglemaster
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: '8080'
+        - name: TARGET_NAMESPACE
+          value: togglemaster
+        - name: ALLOWED_DEPLOYMENTS
+          value: auth-service,flag-service,targeting-service,evaluation-service,analytics-service
+        - name: COOLDOWN_SECONDS
+          value: '300'
+        - name: SELF_HEALING_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: SELF_HEALING_TOKEN
+              name: self-healing-secrets
+        image: togglemaster/self-healing:bootstrap
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+        name: self-healing
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /mnt/secrets-store
+          name: secrets-store-inline
+          readOnly: true
+      imagePullSecrets:
+      - name: ocir-pull-secret
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: self-healing
+      volumes:
+      - csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: self-healing-secrets
+        name: secrets-store-inline
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: self-healing-secrets
+  namespace: togglemaster
+spec:
+  parameters:
+    authType: workload
+    secrets: "- name: __OCI_SELF_HEALING_TOKEN_SECRET_NAME__\n  stage: CURRENT\n  fileName: SELF_HEALING_TOKEN\n"
+    vaultId: __OCI_VAULT_ID__
+  provider: oci
+  secretObjects:
+  - data:
+    - key: SELF_HEALING_TOKEN
+      objectName: SELF_HEALING_TOKEN
+    secretName: self-healing-secrets
+    type: Opaque

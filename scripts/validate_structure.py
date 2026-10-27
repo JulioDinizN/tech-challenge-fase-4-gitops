@@ -8,7 +8,7 @@ import sys
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICES = ('auth-service', 'flag-service', 'targeting-service', 'evaluation-service', 'analytics-service')
+SERVICES = ('auth-service', 'flag-service', 'targeting-service', 'evaluation-service', 'analytics-service', 'self-healing')
 PLACEHOLDER = re.compile(r'__[A-Z0-9_]+__|ocir\.invalid|replace-with|:bootstrap|:latest')
 
 

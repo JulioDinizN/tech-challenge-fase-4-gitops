@@ -35,6 +35,9 @@ jobs:
             apps/targeting-service/overlays/homolog
             apps/evaluation-service/overlays/homolog
             apps/analytics-service/overlays/homolog
+            apps/self-healing/overlays/homolog
+            observability/applications
+            observability/config
           )
           for root in "${roots[@]}"; do
             docker run --rm \

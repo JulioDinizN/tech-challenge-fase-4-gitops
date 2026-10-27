@@ -15,6 +15,7 @@ spec:
           - name: targeting-service
           - name: evaluation-service
           - name: analytics-service
+          - name: self-healing
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
