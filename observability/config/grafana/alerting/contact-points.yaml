@@ -2,6 +2,7 @@ apiVersion: 1
 
 # Destinos do alerta no cluster. As credenciais chegam como variáveis de ambiente
 # a partir do OCI Vault (SecretProviderClass grafana-secrets); nenhum valor fica no Git.
+# O Grafana expande $NOME neste arquivo: os templates não podem usar variáveis com $.
 contactPoints:
   - orgId: 1
     name: togglemaster-incidents
@@ -23,7 +24,7 @@ contactPoints:
           message: |-
             {{ range .Alerts }}**{{ .Annotations.summary }}**
             Serviço: `{{ .Labels.service }}` · Severidade: `{{ .Labels.severity }}` · Status: `{{ .Status }}`
-            Valor medido: {{ range $k, $v := .Values }}{{ $k }}={{ printf "%.2f" $v }} {{ end }}
+            Valor medido: {{ with index .Values "A" }}{{ printf "%.1f" . }}%{{ end }} (limite: 5%)
             {{ .Annotations.description }}
             Início: {{ .StartsAt.Format "02/01/2006 15:04:05 MST" }}
             Dashboard: {{ .DashboardURL }}
