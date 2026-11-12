@@ -53,6 +53,8 @@ spec:
           value: analytics-service
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://otel-collector.observability.svc.cluster.local:4318
+        - name: OTEL_METRIC_EXPORT_INTERVAL
+          value: '15000'
         - name: OTEL_RESOURCE_ATTRIBUTES
           value: deployment.environment.name=homolog
         - name: ANALYTICS_WORKER_ENABLED
