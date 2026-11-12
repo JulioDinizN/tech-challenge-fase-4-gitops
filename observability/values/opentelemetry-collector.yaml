@@ -2,7 +2,8 @@
 # - Recebe OTLP dos microsserviços (Service local por nó).
 # - Lê os logs de todos os contêineres do cluster (file_log), exceto os dos serviços,
 #   que já chegam por OTLP com trace_id.
-# - Roteia métricas ao Prometheus, logs ao Loki e traces ao New Relic.
+# - Roteia métricas ao Prometheus, logs ao Loki e traces ao Datadog (APM).
+#   O connector datadog calcula as estatísticas de APM a partir dos spans; não há Datadog Agent.
 fullnameOverride: otel-collector
 mode: daemonset
 
@@ -23,11 +24,14 @@ presets:
     enabled: true
 
 extraEnvs:
-  - name: NEW_RELIC_LICENSE_KEY
+  - name: DD_API_KEY
     valueFrom:
       secretKeyRef:
         name: otel-collector-secrets
-        key: NEW_RELIC_LICENSE_KEY
+        key: DD_API_KEY
+  # Site do Datadog da conta (US1). Outras regiões: datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com.
+  - name: DD_SITE
+    value: datadoghq.com
 extraVolumes:
   - name: secrets-store-inline
     csi:
@@ -68,21 +72,27 @@ config:
         # e o alerta usam job="<serviço>", igual ao ambiente local.
         - key: service.namespace
           action: delete
+  connectors:
+    datadog/connector: {}
   exporters:
     prometheus_remote_write:
       endpoint: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090/api/v1/write
     otlp_http/loki:
       endpoint: http://loki.observability.svc.cluster.local:3100/otlp
-    otlp_http/newrelic:
-      endpoint: https://otlp.nr-data.net
-      headers:
-        api-key: ${env:NEW_RELIC_LICENSE_KEY}
+    datadog:
+      api:
+        site: ${env:DD_SITE}
+        key: ${env:DD_API_KEY}
   service:
     pipelines:
       traces:
         receivers: [otlp]
         processors: [memory_limiter, k8s_attributes, resource/environment, batch]
-        exporters: [otlp_http/newrelic]
+        exporters: [datadog/connector, datadog]
+      metrics/apm:
+        receivers: [datadog/connector]
+        processors: [memory_limiter, batch]
+        exporters: [datadog]
       metrics:
         receivers: [otlp]
         processors: [memory_limiter, k8s_attributes, resource/environment, batch]

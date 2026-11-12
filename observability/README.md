@@ -16,7 +16,7 @@ observability/
 | loki | grafana/loki | 7.5.0 | 1 |
 | opentelemetry-collector | open-telemetry/opentelemetry-collector | 0.177.0 | 2 |
 
-- **OTel Collector** (DaemonSet `otel-collector`): recebe OTLP dos serviços, lê os logs de todos os contêineres (`file_log`), adiciona metadados do Kubernetes e exporta métricas ao Prometheus (remote write), logs ao Loki (OTLP) e traces ao New Relic (OTLP).
+- **OTel Collector** (DaemonSet `otel-collector`): recebe OTLP dos serviços, lê os logs de todos os contêineres (`file_log`), adiciona metadados do Kubernetes e exporta métricas ao Prometheus (remote write), logs ao Loki (OTLP) e traces ao Datadog (exporter `datadog`; o connector `datadog/connector` gera as estatísticas de APM, sem Datadog Agent).
 - **Prometheus**: métricas das aplicações e do cluster. Alertmanager desligado; os alertas são do Grafana.
 - **Loki**: single binary com armazenamento local.
 - **Grafana**: sidecars carregam o dashboard (`grafana_dashboard: "1"`) e regras/contact points (`grafana_alert: "1"`). Credenciais e chaves de integração vêm do OCI Vault pela SecretProviderClass `grafana-secrets`.
