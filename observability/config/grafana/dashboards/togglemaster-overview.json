@@ -33,7 +33,7 @@
         "refresh": 2,
         "multi": true,
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "selected": true,
           "text": [
@@ -546,6 +546,58 @@
       }
     },
     {
+      "type": "timeseries",
+      "title": "Eventos processados pelo analytics-service",
+      "description": "Eventos de avaliação consumidos da fila por segundo, por resultado. O analytics-service é um worker e não aparece nas taxas HTTP.",
+      "id": 22,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (outcome) (rate(analytics_events_processed_total{job=\"analytics-service\"}[1m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
       "type": "row",
       "title": "Recursos do cluster (Kubernetes)",
       "id": 10,
@@ -554,7 +606,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 29
       },
       "panels": []
     },
@@ -571,7 +623,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 22
+        "y": 30
       },
       "targets": [
         {
@@ -634,7 +686,7 @@
         "h": 4,
         "w": 6,
         "x": 6,
-        "y": 22
+        "y": 30
       },
       "targets": [
         {
@@ -697,7 +749,7 @@
         "h": 4,
         "w": 6,
         "x": 12,
-        "y": 22
+        "y": 30
       },
       "targets": [
         {
@@ -752,7 +804,7 @@
         "h": 4,
         "w": 6,
         "x": 18,
-        "y": 22
+        "y": 30
       },
       "targets": [
         {
@@ -811,7 +863,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 34
       },
       "targets": [
         {
@@ -863,7 +915,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 34
       },
       "targets": [
         {
@@ -915,7 +967,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 42
       },
       "targets": [
         {
@@ -967,7 +1019,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 42
       },
       "targets": [
         {
@@ -1015,7 +1067,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 50
       },
       "panels": []
     },
@@ -1032,7 +1084,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 51
       },
       "targets": [
         {
@@ -1066,7 +1118,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 61
       },
       "targets": [
         {
