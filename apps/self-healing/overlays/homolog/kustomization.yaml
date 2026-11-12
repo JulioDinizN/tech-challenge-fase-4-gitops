@@ -6,8 +6,8 @@ resources:
 
 images:
   - name: togglemaster/self-healing
-    newName: ocir.invalid/togglemaster/self-healing
-    newTag: bootstrap
+    newName: iad.ocir.io/idjtuagz9un0/togglemaster/self-healing
+    newTag: sha-86b86899de3a
 
 labels:
   - pairs:

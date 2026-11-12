@@ -157,8 +157,8 @@ metadata:
 spec:
   parameters:
     authType: workload
-    secrets: "- name: __OCI_SELF_HEALING_TOKEN_SECRET_NAME__\n  stage: CURRENT\n  fileName: SELF_HEALING_TOKEN\n"
-    vaultId: __OCI_VAULT_ID__
+    secrets: "- name: togglemaster-self-healing-token\n  stage: CURRENT\n  fileName: SELF_HEALING_TOKEN\n"
+    vaultId: ocid1.vault.oc1.iad.ejvpmsrxaah6e.abuwcljrsq4jrksys3cs2xt5xa4ao3u5nxja2h5icd2dz7yq3daqdh4is7wq
   provider: oci
   secretObjects:
   - data:
