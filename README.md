@@ -2,7 +2,7 @@
 
 Repositório do estado desejado Kubernetes para o Tech Challenge Fase 4. Evolui do repositório GitOps da Fase 3, commit `555ac3f`, e adiciona a stack de observabilidade em `observability/`.
 
-Este repositório não instala Argo CD, não acessa o OKE e não aplica manifests. As políticas de auto-sync estão explicitamente desabilitadas até a infraestrutura, os secrets de bootstrap e os manifests migrados serem revisados.
+Este repositório não instala Argo CD, não acessa o OKE e não aplica manifests. As Applications já estão com auto-sync habilitado. A trava do bootstrap é a aplicação raiz, que só existe com `bootstrap_gitops=true` no root Terraform `platform` e é sincronizada manualmente depois de a infraestrutura, os secrets de bootstrap e os manifests sem placeholders serem revisados.
 
 ## Responsabilidades
 
@@ -20,7 +20,7 @@ tech-challenge-fase-4 main
   -> CI publica imagens sha-* no OCIR
   -> um job altera os overlays afetados neste repositório
   -> um único commit registra a promoção
-  -> Argo CD reconcilia depois que auto-sync for autorizado
+  -> Argo CD reconcilia automaticamente (auto-sync)
 ~~~
 
 ## Estrutura
@@ -48,4 +48,4 @@ A habilitação exige revisão explícita de:
 2. Vault/CSI e imagePullSecret disponíveis.
 3. Imagens sha-* existentes no OCIR.
 4. Argo CD instalado pelo state platform.
-5. Mudança de automated.enabled para true.
+5. `validate_structure.py --ready` sem erros antes de `bootstrap_gitops=true`.
