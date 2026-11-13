@@ -95,9 +95,11 @@ grafana:
       enabled: true
       label: grafana_alert
       searchNamespace: observability
+  # 384Mi não bastou no OKE: com o dashboard, o Explore e o Alerting abertos o Grafana
+  # encostou no limite e passou a responder 503 no health check.
   resources:
     requests:
-      cpu: 50m
-      memory: 192Mi
+      cpu: 200m
+      memory: 512Mi
     limits:
-      memory: 384Mi
+      memory: 1Gi
